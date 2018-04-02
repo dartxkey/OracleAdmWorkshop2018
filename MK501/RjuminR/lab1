@@ -1,0 +1,94 @@
+1. создать последовательность для primary key DEPARTAMENT
+начало с 100, без ограничений, без кэширования.
+2. выбрать из словаря данных параметры созданной последовательности.
+select * from ALL_SEQUENCES where SEQUENCE_NAME='TEST1'
+HR	TEST1	1	9999999999999999999999999999	1	N	N	0	100
+3. создать неуникальный индекс на произвольном столбце EMPLOYYES, вывести инфо о нем из словаря данных. (имя столбцы, тип,видимость)
+select * from DBA_INDEXES where index_name='INDEX1'
+HR	INDEX1	NORMAL	HR	EMPLOYEES	TABLE	NONUNIQUE	DISABLED		USERS	2	255	65536	1048576	1	2147483645						10	YES	0	1	98	1	1	13	VALID	107	107	19.02.18	1	1	NO	N	N	N	DEFAULT	DEFAULT	DEFAULT	NO						NO				NO	NO	NO	VISIBLE		YES
+4. создать триггер, обеспечивающий генерацию нового номера отдела, использую sequence
+create or replace TRIGGER HR.OTDEL 
+BEFORE INSERT ON HR.DEPARTMENTS 
+FOR EACH ROW
+BEGIN
+    IF( :new.department_id IS NULL )
+    THEN
+        :new.department_id:=TEST2.NEXTVAL;
+    END if;
+END;
+5. модифицировать последовательность, ограничив сверху, так, чтобы она закнчилась на следующей вставке
+One error saving changes to table "HR"."DEPARTMENTS":
+Row 30: ORA-08004: sequence TEST2.NEXTVAL exceeds MAXVALUE and cannot be instantiated
+ORA-06512: at "HR.OTDEL", line 4
+ORA-04088: error during execution of trigger 'HR.OTDEL'
+ORA-06512: at line 1
+6. модифицировать триггер на вставку так, чтобы исключение из п.5 вызывалось явно и было ПОЛЬЗОВАТЕЛЬСКИМ. Код придумать любой.
+create or replace TRIGGER HR.OTDEL 
+
+
+BEFORE INSERT ON HR.DEPARTMENTS 
+/*DECLARE
+A varchar2 :="TEST123";*/
+FOR EACH ROW
+declare
+l_ex_max_val exception;
+pragma exception_init(l_ex_max_val, -8004);
+l_val number;
+BEGIN
+    IF( :new.department_id IS NULL )
+    THEN
+        :new.department_id:=TEST2.NEXTVAL;
+        
+        /*select TEST2.nextval into new.department_id FROM HR.TEST2;*/
+    END if;
+    EXCEPTION
+             when l_ex_max_val            
+                then dbms_output.put_line('ERROR! sequence gen_val exceeds its max value');
+                /*SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = "Error ...";
+                /*rollback;*/
+                RAISE_APPLICATION_ERROR(-30000, 'ERROR! sequence gen_val exceeds its max value');
+                return;
+                /*rollback;*/
+        
+END;
+One error saving changes to table "HR"."DEPARTMENTS":
+Row 30: ORA-21000: error number argument to raise_application_error of -30000 is out of range
+ORA-06512: at "HR.OTDEL", line 17
+ORA-04088: error during execution of trigger 'HR.OTDEL'
+ORA-06512: at line 1
+7. Генерировать всякий раз исключение, если делается попытка изменения зарплаты ген.директора.
+CREATE OR REPLACE TRIGGER EMP_TRIG 
+BEFORE UPDATE ON HR.EMPLOYEES 
+for each row
+BEGIN
+    if((:new.SALARY!=:old.SALARY) and (:old.JOB_ID like 'AD_PRES')) then
+        /*rollback;*/
+        RAISE_APPLICATION_ERROR(-30000, 'ERROR! Gen');
+    end if;
+  NULL;
+END;
+UPDATE "HR"."EMPLOYEES" SET SALARY = '24001' WHERE ROWID = 'AAAEAbAAEAAAADNAAA' AND ORA_ROWSCN = '1395468'
+ORA-21000: error number argument to raise_application_error of -30000 is out of range
+ORA-06512: at "HR.EMP_TRIG", line 4
+ORA-04088: error during execution of trigger 'HR.EMP_TRIG'
+
+
+One error saving changes to table "HR"."EMPLOYEES":
+Row 1: ORA-21000: error number argument to raise_application_error of -30000 is out of range
+ORA-06512: at "HR.EMP_TRIG", line 4
+ORA-04088: error during execution of trigger 'HR.EMP_TRIG'
+
+Local changes cleared
+
+
+UPDATE "HR"."EMPLOYEES" SET SALARY = '17001' WHERE ROWID = 'AAAEAbAAEAAAADNAAB' AND ORA_ROWSCN = '1395468'
+
+Commit Successful
+
+8. создать триггер на регистрацию пользователя с записью времени и имени юзера в отлельную таблицу. Создать представление, показавающее пользователю только его входы.
+CREATE OR REPLACE TRIGGER WRITELOGON 
+AFTER LOGON ON DATABASE 
+BEGIN
+    insert into loginfo VALUES (USER, SYSDATE);
+  NULL;
+END;
