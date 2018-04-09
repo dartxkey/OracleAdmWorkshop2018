@@ -1,0 +1,76 @@
+-- 1
+CREATE SEQUENCE department
+    START WITH 100
+    INCREMENT BY 1
+    NOCACHE
+    NOCYCLE;
+
+-- 2    
+SELECT * FROM USER_SEQUENCES WHERE SEQUENCE_NAME='DEPARTMENT';
+
+-- 3
+CREATE INDEX hire_date_index ON hr.employees(hire_date);
+SELECT * FROM USER_INDEXES WHERE INDEX_NAME='HIRE_DATE_INDEX';
+
+-- 4  
+CREATE TRIGGER trg_dep_id
+    BEFORE INSERT ON HR.EMPLOYEES
+    FOR EACH ROW
+BEGIN
+    :new.DEPARTMENT_ID := DEPARTMENT.nextval;
+END;
+
+-- 5
+DECLARE
+    new_max_seq INTEGER;
+BEGIN
+    SELECT last_number + 1
+    INTO new_max_seq
+    FROM USER_SEQUENCES WHERE SEQUENCE_NAME='DEPARTMENT';
+    EXECUTE IMMEDIATE 'ALTER SEQUENCE department MAXVALUE ' || new_max_seq;
+
+END;
+
+-- 6
+CREATE OR REPLACE TRIGGER trg_dep_id
+    BEFORE INSERT ON HR.EMPLOYEES
+    FOR EACH ROW
+DECLARE
+    user_xcep EXCEPTION;
+    PRAGMA EXCEPTION_INIT(user_xcep, -20001);
+BEGIN
+    :new.DEPARTMENT_ID := DEPARTMENT.nextval;
+EXCEPTION
+    WHEN user_xcep THEN
+        raise_application_error(-20001, 'Sequence is ended.');
+END;
+
+-- 7
+CREATE TRIGGER trg_ch_sal
+    BEFORE UPDATE OF salary ON HR.EMPLOYEES
+    FOR EACH ROW
+DECLARE
+    user_xcep2 EXCEPTION;
+    PRAGMA EXCEPTION_INIT(user_xcep2, -20002);
+BEGIN
+    IF :new.JOB_ID = 'AD_PRES' THEN
+        RAISE user_xcep2;
+    END IF;
+EXCEPTION
+    WHEN user_xcep2 THEN
+        raise_application_error(-20002, 'CEO salaries cannot be changed.');
+END;
+
+-- 8
+CREATE TABLE user_log(user_id varchar2(30), logon_time varchar2(20));
+
+CREATE TRIGGER trg_log_audit
+    AFTER LOGON ON DATABASE
+BEGIN
+    INSERT INTO user_log values(user, to_char(sysdate, 'hh24:mi:ss dd.mm.yyyy'));
+END;
+
+CREATE VIEW usr_log_view AS 
+    SELECT logon_time 
+    FROM user_log 
+    WHERE user_id = '&USER_ID';
