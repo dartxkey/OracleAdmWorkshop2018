@@ -1,0 +1,167 @@
+---- 1
+CREATE SEQUENCE department
+    START WITH 100
+    INCREMENT BY 1
+    NOCACHE
+    NOCYCLE;
+
+-- Script Output: Sequence DEPARTMENT created.
+
+---- 2    
+SELECT * FROM USER_SEQUENCES WHERE SEQUENCE_NAME='DEPARTMENT';
+
+---- Query Result: SEQUENCE_NAME   MIN_VALUE          MAX_VALUE             INCREMENT_BY   CYCLE_FLAG  ORDER_FLAG  CACHE_SIZE  LAST_NUMBER
+----      1         DEPARTMENT        1       9999999999999999999999999999       1              N          N           0         100
+
+---- 3
+CREATE INDEX hire_date_index ON hr.employees(hire_date);
+
+---- Script Output: Index HIRE_DATE_INDEX created.
+
+SELECT * FROM USER_INDEXES WHERE INDEX_NAME='HIRE_DATE_INDEX';
+
+---- Query Result:    INDEX_NAME       INDEX_TYPE  TABLE_OWNER  TABLE_NAME   TABLE_TYPE  UNIQUENESS  COMPRESSION  PREFIX_LENGTH  TABLESPACE_NAME  INI_TRANS  MAX_TRANS  INITIAL_EXTENT  NEXT_EXTENT  MIN_EXTENTS  MAX_EXTENTS  PCT_INCREASE  PCT_THRESHOLD  INCLUDE_COLUMN  FREELISTS  FREELIST_GROUPS  PCT_FREE  LOGGING  BLEVEL  LEAF_BLOCKS  DISTINCT_KEYS  AVG_LEAF_BLOCKS_PER_KEY  AVG_DATA_BLOCKS_PER_KEY  CLUSTERING_FACTOR  STATUS  NUM_ROWS  SAMPLE_SIZE  LAST_ANALYZED  DEGREE  INSTANCES  PARTITIONED  TEMPORARY  GENERATED  SECONDARY  BUFFER_POOL  FLASH_CACHE  CELL_FLASH_CACHE  USER_STATS  DURATION  PCT_DIRECT_ACCESS  ITYP_OWNER  ITYP_NAME  PARAMETERS  GLOBAL_STATS  DOMIDX_STATUS  DOMIDX_OPSTATUS  FUNCIDX_STATUS  JOIN_INDEX  IOT_REDUNDANT_PKEY_ELIM  DROPPED  VISIBILITY  DOMIDX_MANAGEMENT  SEGMENT_CREATED
+----      1         HIRE_DATE_INDEX      NORMAL        HR       EMPLOYEES      TABLE     NONUNIQUE    DISABLED       (null)        SYSTEM            2         255         65536         1048576          1       2147483645      (null)        (null)         (null)           1             1             10      YES       0        1             98                   1                       1                    13            VALID    107         107         13.04.18      1         1           NO          N          N         N         DEFAULT      DEFAULT         DEFAULT         NO        (null)        (null)          (null)     (null)      (null)       NO            (null)          (null)          (null)          NO                NO                NO      VISIBLE         (null)             YES
+
+-- 4  
+CREATE OR REPLACE TRIGGER trg_dep_id
+    BEFORE INSERT ON HR.DEPARTMENTS
+    FOR EACH ROW
+BEGIN
+    :new.DEPARTMENT_ID := DEPARTMENT.nextval;
+END;
+/
+
+-- Script Output: Trigger TRG_DEP_ID compiled
+
+SELECT * FROM USER_TRIGGERS WHERE TRIGGER_NAME='TRG_DEP_ID';
+
+---- Query Result: TRIGGER_NAME   TRIGGER_TYPE          TRIGGERING_EVENT   TABLE_OWNER   BASE_OBJECT_TYPE  TABLE_NAME   COLUMN_NAME         REFERENCING_NAMES             WHEN_CLAUSE   STATUS                          DESCRIPTION                             ACTION_TYPE                         TRIGGER_BODY                        CROSSEDITION    BEFORE_STATEMENT    BEFORE_ROW   AFTER_ROW   AFTER_STATEMENT    INSTEAD_OF_ROW   FIRE_ONCE  APPLY_SERVER_ONLY
+----      1         TRG_DEP_ID    BEFORE EACH ROW           INSERT             HR            TABLE          EMPLOYEES     (null)     REFERENCING NEW AS NEW OLD AS OLD      (null)      ENABLED     trg_dep_id   BEFORE INSERT ON HR.EMPLOYEES FOR EACH ROW       PL/SQL        BEGIN :new.DEPARTMENT_ID := DEPARTMENT.nextval; END;        NO               NO                 NO          NO            NO                  NO            YES             NO
+
+INSERT INTO HR.DEPARTMENTS (department_name, manager_id, location_id) VALUES ('Development', 103, 1400);
+
+-- Script Output: 1 row inserted.
+
+SELECT * FROM HR.DEPARTMENTS;
+
+---- Query Result: 
+--DEPARTMENT_ID DEPARTMENT_NAME MANAGER_ID LOCATION_ID
+--10	Administration	200	1700
+--20	Marketing	201	1800
+--30	Purchasing	114	1700
+--40	Human Resources	203	2400
+--50	Shipping	121	1500
+--60	IT	103	1400
+--70	Public Relations	204	2700
+--80	Sales	145	2500
+--90	Executive	100	1700
+--100	Finance	108	1700
+--110	Accounting	205	1700
+--120	Treasury		1700
+--130	Corporate Tax		1700
+--140	Control And Credit		1700
+--150	Shareholder Services		1700
+--160	Benefits		1700
+--170	Manufacturing		1700
+--180	Construction		1700
+--190	Contracting		1700
+--200	Operations		1700
+--210	IT Support		1700
+--220	NOC		1700
+--230	IT Helpdesk		1700
+--240	Government Sales		1700
+--250	Retail Sales		1700
+--260	Recruiting		1700
+--270	Payroll		1700
+--101	Development	103	1400
+
+---- 5
+DECLARE
+    new_max_seq INTEGER;
+BEGIN
+    SELECT last_number - 1
+    INTO new_max_seq
+    FROM USER_SEQUENCES WHERE SEQUENCE_NAME='DEPARTMENT';
+    
+    EXECUTE IMMEDIATE 'ALTER SEQUENCE department MAXVALUE ' || new_max_seq;
+
+END;
+
+-- Script Output: PL/SQL procedure successfully completed.
+
+SELECT department.nextval FROM dual;
+
+-- Query Result: ORA-08004: sequence DEPARTMENT.NEXTVAL exceeds MAXVALUE and cannot be instantiated
+-- 08004. 00000 -  "sequence %s.NEXTVAL %s %sVALUE and cannot be instantiated"
+-- *Cause:    instantiating NEXTVAL would violate one of MAX/MINVALUE
+-- *Action:   alter the sequence so that a new value can be requested
+
+---- 6
+CREATE OR REPLACE TRIGGER trg_dep_id
+    BEFORE INSERT ON HR.DEPARTMENTS
+    FOR EACH ROW
+DECLARE
+    user_xcep EXCEPTION;
+    PRAGMA EXCEPTION_INIT(user_xcep, -8004);
+BEGIN
+    :new.DEPARTMENT_ID := DEPARTMENT.nextval;
+EXCEPTION
+    WHEN user_xcep THEN
+        raise_application_error(num=> -20001, msg=> 'Sequence is ended.'); 
+END;
+/
+
+-- Script Output: Trigger TRG_DEP_ID compiled
+
+INSERT INTO HR.DEPARTMENTS (department_name, manager_id, location_id) VALUES ('Some Department', 103, 1700);
+
+-- Script Output: Error starting at line : 102 in command -
+--INSERT INTO HR.DEPARTMENTS (department_name, manager_id, location_id) VALUES ('Some Department', 103, 1700)
+--Error report -
+--ORA-20001: Sequence is ended.
+--ORA-06512: at "SYSTEM.TRG_DEP_ID", line 8
+--ORA-04088: error during execution of trigger 'SYSTEM.TRG_DEP_ID'
+
+---- 7
+CREATE OR REPLACE TRIGGER trg_ch_sal
+    BEFORE UPDATE OF salary ON HR.EMPLOYEES
+    FOR EACH ROW
+BEGIN
+    IF :new.JOB_ID = 'AD_PRES' THEN
+        raise_application_error(-20002, 'CEO salaries cannot be changed.');
+    END IF;
+END;
+/
+
+-- Script Output: Trigger TRG_CH_SAL compiled
+
+UPDATE HR.EMPLOYEES SET salary = 0 WHERE JOB_ID = 'AD_PRES';
+
+-- Script Output: Error starting at line : 123 in command -
+--UPDATE HR.EMPLOYEES SET salary = 0 WHERE JOB_ID = 'AD_PRES'
+--Error report -
+--ORA-20002: CEO salaries cannot be changed.
+--ORA-06512: at "SYSTEM.TRG_CH_SAL", line 3
+--ORA-04088: error during execution of trigger 'SYSTEM.TRG_CH_SAL'
+
+---- 8
+CREATE TABLE user_log(user_id varchar2(30), logon_time varchar2(20));
+
+-- Script Output: Table USER_LOG created.
+
+CREATE TRIGGER trg_log_audit
+    AFTER LOGON ON DATABASE
+BEGIN
+    INSERT INTO user_log values(user, to_char(sysdate, 'hh24:mi:ss dd.mm.yyyy'));
+END;
+/
+
+-- Script Output: Trigger TRG_LOG_AUDIT compiled
+
+CREATE OR REPLACE VIEW usr_log_view AS 
+    SELECT logon_time 
+    FROM user_log 
+    WHERE user_id = USER;
+
+-- Script Output:  View USR_LOG_VIEW created.
