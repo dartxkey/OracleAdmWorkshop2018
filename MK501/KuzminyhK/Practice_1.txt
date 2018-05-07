@@ -1,22 +1,22 @@
-1. создать последовательность для primary key DEPARTAMENT
-начало с 100, без ограничений, без кэшированиЯ.
+1. СЃРѕР·РґР°С‚СЊ РїРѕСЃР»РµРґРѕРІР°С‚РµР»СЊРЅРѕСЃС‚СЊ РґР»В¤ primary key DEPARTAMENT
+РЅР°С‡Р°Р»Рѕ СЃ 100, Р±РµР· РѕРіСЂР°РЅРёС‡РµРЅРёР№, Р±РµР· РєСЌС€РёСЂРѕРІР°РЅРёСЏ.
 
 CREATE SEQUENCE my_seq START WITH 500 NOCACHE NOMAXVALUE;
 
-Џроверка в 4 задании
+РџСЂРѕРІРµСЂРєР° РІ 4 Р·Р°РґР°РЅРёРё
 
-2. выбрать из словарЯ данных параметры созданной последовательности.
+2. РІС‹Р±СЂР°С‚СЊ РёР· СЃР»РѕРІР°СЂСЏ РґР°РЅРЅС‹С… РїР°СЂР°РјРµС‚СЂС‹ СЃРѕР·РґР°РЅРЅРѕР№ РїРѕСЃР»РµРґРѕРІР°С‚РµР»СЊРЅРѕСЃС‚Рё.
 
 SELECT * FROM SYS.ALL_SEQUENCES WHERE SEQUENCE_NAME = 'MY_SEQ';
 
-3. создать неуникальный индекс на произвольном столбце EMPLOYYES, вывести инфо о нем из словаря данных. (имя столбцы, тип,видимость)
+3. СЃРѕР·РґР°С‚СЊ РЅРµСѓРЅРёРєР°Р»СЊРЅС‹Р№ РёРЅРґРµРєСЃ РЅР° РїСЂРѕРёР·РІРѕР»СЊРЅРѕРј СЃС‚РѕР»Р±С†Рµ EMPLOYYES, РІС‹РІРµСЃС‚Рё РёРЅС„Рѕ Рѕ РЅРµРј РёР· СЃР»РѕРІР°СЂВ¤ РґР°РЅРЅС‹С…. (РёРјВ¤ СЃС‚РѕР»Р±С†С‹, С‚РёРї,РІРёРґРёРјРѕСЃС‚СЊ)
 
 CREATE INDEX EMP_ID ON HR.EMPLOYEES (FIRST_NAME);
 
-‚ывод:
+Р’С‹РІРѕРґ:
 Index EMP_ID created.
 
-4. создать триггер, обеспечивающий генерацию нового номера отдела, использую sequence
+4. СЃРѕР·РґР°С‚СЊ С‚СЂРёРіРіРµСЂ, РѕР±РµСЃРїРµС‡РёРІР°СЋС‰РёР№ РіРµРЅРµСЂР°С†РёСЋ РЅРѕРІРѕРіРѕ РЅРѕРјРµСЂР° РѕС‚РґРµР»Р°, РёСЃРїРѕР»СЊР·СѓСЋ sequence
 
 CREATE OR REPLACE TRIGGER my_trigger
 BEFORE INSERT ON HR.DEPARTMENTS
@@ -28,26 +28,26 @@ END;
 
 INSERT INTO HR.DEPARTMENTS(DEPARTMENT_NAME) VALUES('new_dep');
 
-‚ывод:
+Р’С‹РІРѕРґ:
 Sequence MY_SEQ created.
 Trigger MY_TRIGGER compiled
 1 row inserted.
 
 SELECT DEPARTMENT_ID FROM HR.DEPARTMENTS WHERE DEPARTMENT_NAME='new_dep';
 
-‚ывод:
+Р’С‹РІРѕРґ:
 500
 
-5. Њодифицировать последовательность, ограничив сверху, так, чтобы она закончилась на следующей вставке
+5. РњРѕРґРёС„РёС†РёСЂРѕРІР°С‚СЊ РїРѕСЃР»РµРґРѕРІР°С‚РµР»СЊРЅРѕСЃС‚СЊ, РѕРіСЂР°РЅРёС‡РёРІ СЃРІРµСЂС…Сѓ, С‚Р°Рє, С‡С‚РѕР±С‹ РѕРЅР° Р·Р°РєРѕРЅС‡РёР»Р°СЃСЊ РЅР° СЃР»РµРґСѓСЋС‰РµР№ РІСЃС‚Р°РІРєРµ
 
 ALTER SEQUENCE MY_SEQ MAXVALUE ???;
-•очетсЯ вставить вместо ??? nextval
+РҐРѕС‡РµС‚СЃСЏ РІСЃС‚Р°РІРёС‚СЊ РІРјРµСЃС‚Рѕ ??? nextval
 
-‘пособы получениЯ nextval
+РЎРїРѕСЃРѕР±С‹ РїРѕР»СѓС‡РµРЅРёСЏ nextval
 select MY_SEQ.nextval from dual;
 SELECT last_number FROM user_sequences WHERE sequence_name = 'MY_SEQ';
 
-6. Њодифицировать триггер на вставку так, чтобы исключение из п.5 вызывалось Явно и было пользовательским. Љод придумать любой.
+6. РњРѕРґРёС„РёС†РёСЂРѕРІР°С‚СЊ С‚СЂРёРіРіРµСЂ РЅР° РІСЃС‚Р°РІРєСѓ С‚Р°Рє, С‡С‚РѕР±С‹ РёСЃРєР»СЋС‡РµРЅРёРµ РёР· Рї.5 РІС‹Р·С‹РІР°Р»РѕСЃСЊ СЏРІРЅРѕ Рё Р±С‹Р»Рѕ РїРѕР»СЊР·РѕРІР°С‚РµР»СЊСЃРєРёРј. РљРѕРґ РїСЂРёРґСѓРјР°С‚СЊ Р»СЋР±РѕР№.
 
 CREATE OR REPLACE TRIGGER DEPARTMENTS_EXCEPT
 BEFORE INSERT
@@ -63,10 +63,10 @@ BEGIN
 END;
 /
 
-Џроверка (попытка вставить новое значение в DEPARTAMENTS):
+РџСЂРѕРІРµСЂРєР° (РїРѕРїС‹С‚РєР° РІСЃС‚Р°РІРёС‚СЊ РЅРѕРІРѕРµ Р·РЅР°С‡РµРЅРёРµ РІ DEPARTAMENTS):
 
 INSERT INTO HR.DEPARTMENTS(DEPARTMENT_NAME) VALUES('excep_dep');
-‚ывод:
+Р’С‹РІРѕРґ:
 INSERT INTO HR.DEPARTMENTS(DEPARTMENT_NAME) VALUES('excep_dep')
 Error report -
 ORA-06510: PL/SQL: unhandled user-defined exception
@@ -74,11 +74,11 @@ ORA-06512: at "SYS.DEPARTMENTS_EXCEPT", line 5
 ORA-04088: error during execution of trigger 'SYS.DEPARTMENTS_EXCEPT'
 
 INSERT INTO HR.DEPARTMENTS(DEPARTMENT_NAME) VALUES('excep_dep1');
-‚ывод:
+Р’С‹РІРѕРґ:
 1 row inserted.
 
 
-7. ѓенерировать всЯкий раз исключение, если делаетсЯ попытка изменениЯ зарплаты ген.директора.
+7. Р“РµРЅРµСЂРёСЂРѕРІР°С‚СЊ РІСЃСЏРєРёР№ СЂР°Р· РёСЃРєР»СЋС‡РµРЅРёРµ, РµСЃР»Рё РґРµР»Р°РµС‚СЃСЏ РїРѕРїС‹С‚РєР° РёР·РјРµРЅРµРЅРёСЏ Р·Р°СЂРїР»Р°С‚С‹ РіРµРЅ.РґРёСЂРµРєС‚РѕСЂР°.
 
 CREATE OR REPLACE TRIGGER SALARY_TRIGGER
 BEFORE UPDATE
@@ -94,17 +94,17 @@ BEGIN
 END;
 /
 
-Џроверка:
+РџСЂРѕРІРµСЂРєР°:
 UPDATE HR.EMPLOYEES SET SALARY = 10 WHERE employee_id = 107;
 
-‚ывод:
+Р’С‹РІРѕРґ:
 UPDATE HR.EMPLOYEES SET SALARY = 10 WHERE employee_id = 107
 Error report -
 ORA-06510: PL/SQL: unhandled user-defined exception
 ORA-06512: at "SYS.SALARY_TRIGGER", line 5
 ORA-04088: error during execution of trigger 'SYS.SALARY_TRIGGER'
 
-8. создать триггер на регистрацию пользователЯ с записью времени и имени юзера в отлельную таблицу. ‘оздать представление, показавающее пользователю только его входы.
+8. СЃРѕР·РґР°С‚СЊ С‚СЂРёРіРіРµСЂ РЅР° СЂРµРіРёСЃС‚СЂР°С†РёСЋ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ СЃ Р·Р°РїРёСЃСЊСЋ РІСЂРµРјРµРЅРё Рё РёРјРµРЅРё СЋР·РµСЂР° РІ РѕС‚Р»РµР»СЊРЅСѓСЋ С‚Р°Р±Р»РёС†Сѓ. РЎРѕР·РґР°С‚СЊ РїСЂРµРґСЃС‚Р°РІР»РµРЅРёРµ, РїРѕРєР°Р·Р°РІР°СЋС‰РµРµ РїРѕР»СЊР·РѕРІР°С‚РµР»СЋ С‚РѕР»СЊРєРѕ РµРіРѕ РІС…РѕРґС‹.
 
 CREATE TABLE USERLOGON (
   time DATE,
@@ -118,12 +118,12 @@ BEGIN
 END;
 /
 
-Џоказывает пользователю только его входы благодарЯ условию WHERE
+РџРѕРєР°Р·С‹РІР°РµС‚ РїРѕР»СЊР·РѕРІР°С‚РµР»СЋ С‚РѕР»СЊРєРѕ РµРіРѕ РІС…РѕРґС‹ Р±Р»Р°РіРѕРґР°СЂСЏ СѓСЃР»РѕРІРёСЋ WHERE
 CREATE OR REPLACE VIEW USERLOGON_VIEW AS SELECT time, name FROM USERLOGON WHERE name = USER;
 
 SELECT * FROM USERLOGON_VIEW;
 
-‚ывод:
+Р’С‹РІРѕРґ:
 Table USERLOGON created.
 Trigger USERLOGON_TRIGGER compiled
 View USERLOGON_VIEW created.
