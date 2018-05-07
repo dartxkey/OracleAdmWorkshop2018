@@ -1,0 +1,50 @@
+1 задание
+CREATE SEQUENCE KVN_DEPARTMENT_SEQ NOMAXVALUE START WITH 1 NOCACHE;
+----Sequence  KVN_DEPARTMENT_SEQ created
+ 
+2 задание
+SELECT SEQUENCE_NAME MIN_VALUE INCREMENT_BY MAX_VALUE CYCLE_FLAG ORDER_FLAG CACHE_SIZE  LAST_NUMBER;
+FROM CORNER_WAY_DEPARTMENT_SEQ1;
+ 
+3 задание 
+CREATE INDEX CORNER_WAY_NAME_INDEX ON CORNER_WAY.EMPLOYEES(NAME);
+SELECT * FROM ALL_INDEXES WHERE INDEX_NAME = 'CORNER_WAY_NAME_INDEX';
+ 
+4 задание
+CREATE TRIGGER KVN_DEPARTMENT
+BEFORE INSERT ON KVN.DEPARTMENT
+    FOR EACH ROW    
+BEGIN
+    :new.number_id := KVN_number.nextval;
+END;
+---Trigger KVN_DEPARTMENT compiled 
+
+5 задание
+CREATE SEQUENCE KVN_DEPARTMENTS_SEQ  MAXVALUE 100 INCREMENT BY 10 START WITH 100 NOCACHE;
+ ----Sequence  KVN_DEPARTMENTS_SEQ created
+
+7 задание
+CREATE OR REPLACE TRIGGER SAL_DIR
+    BEFORE UPDATE OF salary ON KVN.EMPLOYEES
+    FOR EACH ROW
+BEGIN
+    IF :new.JOB_ID = 'KVN_JOB.NEXTVAL' THEN
+        raise_application_error(-1200, 'YOU DO NOT REALIZE IT.');
+    END IF;
+END;
+--- Trigger SAL_DIR compiled
+
+8 задание
+CREATE TABLE success_access(username_id varchar2(10), pass_timer varchar2(30));
+---Table SUCCESS_ACCESS created.
+ 
+CREATE TRIGGER any_time_audit
+    AFTER LOGON ON DATABASE
+BEGIN
+    INSERT INTO username_pass values(user, to_char(sysdate, 'hh24:mi:ss dd.mm.yyyy'));
+END;
+ 
+CREATE OR REPLACE VIEW any_pass_view AS 
+    SELECT logon_time 
+    FROM username_pass
+    WHERE username_id = USER;
