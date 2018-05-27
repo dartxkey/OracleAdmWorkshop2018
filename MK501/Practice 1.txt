@@ -1,0 +1,83 @@
+--1 создать последовательность для primary key DEPARTAMENT
+начало с 100, без ограничений, без кэширования.
+
+create SEQUENCE DEPARTAMENTS_KEY_SEQ  START WITH 100 INCREMENT BY 1 NOCACHE NOMINVALUE NOMAXVALUE;
+
+--2 выбрать из словаря данных параметры созданной последовательности.
+SELECT * from ALL_SEQUENCES WHERE SEQUENCE_NAME='DEPARTAMENTS_KEY_SEQ';
+
+--3 создать неуникальный индекс на произвольном столбце EMPLOYYES, вывести инфо о нем из словаря данных. (имя столбцы, тип,видимость)
+--CREATE TABLE EMLOYEES(ID number,DEPARTMENT_ID NUMBER,FIRST_NAME VARCHAR(20), LAST_NAME VARCHAR(20), POSITION VARCHAR(20),SALARY NUMBER);
+CREATE INDEX POSITION_INDEX ON EMLOYEES(POSITION);
+SELECT * FROM ALL_INDEXES WHERE INDEX_NAME='POSITION_INDEX';
+
+--4 создать триггер, обеспечивающий генерацию нового номера отдела, использую sequence
+CREATE TABLE DEPARTMENTS(d_id NUMBER, d_name VARCHAR(20));
+INSERT INTO DEPARTMENTS(d_name) VALUES ('PRESIDENT');
+
+
+CREATE OR REPLACE TRIGGER GENERATE_ID_FOR_EMPLOYEE
+BEFORE INSERT ON DEPARTMENTS
+FOR EACH ROW    
+BEGIN
+    if :new.d_id is null then
+        SELECT DEPARTAMENTS_KEY_SEQ.nextval into :new.d_id FROM DUAL;
+    end if;
+END;
+
+select DEPARTAMENTS_KEY_SEQ.nextval from DUAL;
+
+--5 модифицировать последовательность, ограничив сверху, так, чтобы она закнчилась на следующей вставке
+--variable max_val number;
+--SELECT :max_val from DUAL;
+--SELECT max(d_id) into max_val FROM DEPARTMENTS;
+alter SEQUENCE DEPARTAMENTS_KEY_SEQ MAXVALUE 105;
+
+--6 модифицировать триггер на вставку так, чтобы исключение из п.5 вызывалось явно и было ПОЛЬЗОВАТЕЛЬСКИМ. Код придумать любой.
+CREATE OR REPLACE TRIGGER GENERATE_ID_FOR_EMPLOYEE
+BEFORE INSERT ON DEPARTMENTS
+FOR EACH ROW  
+DECLARE
+    end_seq EXCEPTION;	
+	PRAGMA EXCEPTION_INIT(end_seq, -8004);
+BEGIN
+    :NEW.d_id := DEPARTAMENTS_KEY_SEQ.nextval;
+EXCEPTION	
+    WHEN end_seq THEN
+        raise_application_error(-20050, 'simple message about excaption');
+END;
+
+--7 Генерировать всякий раз исключение, если делается попытка изменения зарплаты ген.директора.
+UPDATE EMLOYEES SET SALARY = 1001 WHERE POSITION = 'PRESIDENT';
+DROP TRIGGER PRESIDENTS_SALARY_SECUR_TRIG;
+/*CREATE OR REPLACE TRIGGER EMPLOYEES_BEFORE_UPDATE
+BEFORE UPDATE
+    ON EMLOYEES
+    FOR EACH ROW   
+DECLARE
+    prez_salary EXCEPTION;	
+BEGIN
+    IF :NEW.POSITION = 'PRESIDENT' AND :NEW.SALARY != :OLD.SALARY THEN
+	    RAISE prez_salary;
+	END IF;
+EXCEPTION	
+    WHEN prez_salary THEN
+        raise_application_error(-20001, 'You cannot change President''s salary.');
+END;*/
+
+CREATE TABLE SIGNIN (SIGNIN_TIME DATE, LOGIN VARCHAR2(100));
+
+--8 создать триггер на регистрацию пользователя с записью времени и имени юзера в отлельную таблицу. Создать представление, показавающее пользователю только его входы.
+CREATE OR REPLACE TRIGGER SIGNIN_TRIGGER
+    AFTER LOGON ON DATABASE
+BEGIN
+   INSERT INTO SIGNIN (SIGNIN_TIME, LOGIN) VALUES (SYSDATE, USER);
+END;
+
+CREATE VIEW USER_SIGNIN_VIEW 
+    AS (SELECT SIGNIN_TIME
+    FROM SIGNIN 
+    WHERE LOGIN = USER);
+GRANT SELECT ON USER_SIGNIN_VIEW TO PUBLIC;
+
+SELECT * FROM USER_SIGNIN_VIEW;
