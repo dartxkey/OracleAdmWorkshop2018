@@ -1,0 +1,69 @@
+##############################################################################
+# Copyright (c) 1991, 2001, 2002 by Oracle Corporation
+##############################################################################
+ 
+###########################################
+# Cache and I/O
+###########################################
+db_block_size=8192
+ 
+###########################################
+# Cursors and Library Cache
+###########################################
+open_cursors=300
+ 
+###########################################
+# Database Identification
+###########################################
+db_domain=""
+db_name=Lifintse
+ 
+###########################################
+# File Configuration
+###########################################
+control_files=("/home/oracle/app/oracle/oradata/Lifintsev/control01.ctl", "/home/oracle/app/oracle/flash_recovery_area/Lifintsev/control02.ctl")
+db_recovery_file_dest=/home/oracle/app/oracle/flash_recovery_area
+db_recovery_file_dest_size=3670016000
+ 
+###########################################
+# Miscellaneous
+###########################################
+compatible=11.2.0.0.0
+db_unique_name=Lifintsev
+diagnostic_dest=/home/oracle/app/oracle
+memory_target=1588592640
+ 
+###########################################
+# NLS
+###########################################
+nls_language="RUSSIAN"
+nls_territory="RUSSIA"
+ 
+###########################################
+# Network Registration
+###########################################
+#local_listener=LISTENER_LIFI
+ 
+###########################################
+# Processes and Sessions
+###########################################
+processes=150
+ 
+###########################################
+# Security and Auditing
+###########################################
+audit_file_dest=/home/oracle/app/oracle/admin/Lifintsev/adump
+audit_trail=db
+remote_login_passwordfile=EXCLUSIVE
+ 
+###########################################
+# Shared Server
+###########################################
+dispatchers="(PROTOCOL=TCP) (SERVICE=lifiXDB)"
+ 
+###########################################
+# System Managed Undo and Rollback Segments
+###########################################
+undo_tablespace=UNDOTBS1
+ 
+ 
