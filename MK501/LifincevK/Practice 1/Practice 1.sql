@@ -17,7 +17,7 @@ create index MY_EMPLOYEE_PHONE_INDEX
 
 select *
 from ALL_INDEXES
-where INDEX_NAME like '%MY_%';
+where INDEX_NAME = 'MY_DEPARTMENT_SEQUENCE';
 
 -- 4. Создать триггер, обеспечивающий генерацию нового номера отдела, использую sequence
 create or replace trigger MY_DEPARTMENT_INSERT_TRIGGER
