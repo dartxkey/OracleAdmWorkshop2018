@@ -1,6 +1,3 @@
--- Разрешение конфликтов блокировок с помощью SQL через V$SESSION
---
-
 GRANT CONNECT, CREATE TABLE, CREATE PROCEDURE TO iksent;
 GRANT UNLIMITED TABLESPACE TO iksent;
 GRANT SELECT ON v_$session TO iksent;
@@ -19,6 +16,7 @@ SET SQLPROMPT "SESSION_2>"
 --
 --
 
+-- Разрешение конфликтов блокировок с помощью SQL через V$SESSION
 -- Разрешить блокировку 2 способами:
 --
 -- 1. зафиксировать/откатить удерживающую транзакцию
