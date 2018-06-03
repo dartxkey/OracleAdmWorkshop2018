@@ -1,0 +1,292 @@
+1. создать базу данных с использованием DBCA
+a. SID базы данных = первые 4 буквы ФИО:
+b. размер блока данных: если Длина фамилии четна — 8К, иначе 16К
+c. пользовательское табличное пространство (First Name%4):
+Type :Auto
+Sizing: если Длина фамилии четна auto, иначе uniform (random size between 1M and 10M)
+
+SID = pust 
+размер блока данных 16К
+
+Создание табличного пространства:
+
+SQL> create user jane identified by jane;
+
+User created.
+
+SQL> grant create session to jane;
+
+Grant succeeded.
+
+
+SQL> create tablespace j datafile '/home/oracle/app/oracle/oradata/pust/j.dbf' size 5M;
+
+Tablespace created.
+
+2. сгенерировать скрипты создания БД с использованием DBCA, сохранить конфигурацию БД как HTML
+3. создать шаблон базы данных на основе созданной и запущенной БД. Имя произвольное. Скрипты создания и шаблоны залить на GitHub.
+
+Создан шаблон с именем test
+
+4. доказать работу экземпляра: вывод из представления словаря данных V$
+
+SQL> select INSTANCE_NAME, STATUS, SHUTDOWN_PENDING, ACTIVE_STATE from V$INSTANCE;
+
+INSTANCE_NAME
+------------------------------------------------
+STATUS				     SHUTDOWN_ ACTIVE_STATE
+------------------------------------ --------- ---------------------------
+pust
+OPEN				     NO        NORMAL
+
+
+5. создать SPFILE для экземпляра
+
+SQL> create spfile = 'spfile_params.ora' from pfile = '/home/oracle/pust/scripts/init.ora';
+
+File created.
+
+6. изменить любой параметр системы только для текущего экземпляра. Доказать выводов V$ и cat файла инициализации
+
+SQL> alter system set open_cursors = 310 scope = memory;
+
+System altered.
+
+SQL> select name, value from v$parameter where name = 'open_cursors';
+
+NAME
+--------------------------------------------------------------------------------
+VALUE
+--------------------------------------------------------------------------------
+open_cursors
+310
+
+7. варианты монтирования и остановки БД
+a. перевести БД в режим READ ONLY
+
+SQL> select open_mode from v$database;
+
+OPEN_MODE
+------------------------------------------------------------
+READ WRITE
+
+SQL> SHUTDOWN IMMEDIATE;
+Database closed.
+Database dismounted.
+ORACLE instance shut down.
+
+SQL> SHUTDOWN IMMEDIATE;
+
+Database closed.
+Database dismounted.
+ORACLE instance shut down.
+
+SQL> STARTUP MOUNT;
+
+ORACLE instance started.
+
+Total System Global Area 1336176640 bytes
+Fixed Size		    2213136 bytes
+Variable Size		  788531952 bytes
+Database Buffers	  536870912 bytes
+Redo Buffers		    8560640 bytes
+Database mounted.
+
+SQL> ALTER DATABASE OPEN READ ONLY;
+
+Database altered.
+
+SQL> SELECT OPEN_MODE FROM V$DATABASE;
+
+OPEN_MODE
+------------------------------------------------------------
+READ ONLY
+
+
+b. перевести БД в режим RESTRICT и перевод в открытую (ALTER SYSTEM DISABLE RESTRICTED SESSION;)
+
+SQL> alter system enable restricted session;
+
+System altered.
+	
+c.	SHUTDOWN (NORMAL/TRANSACTIONAL/IMMEDIATE/ABORT)
+i.	выполнить эксперимент с живой транзакцией IMMEDIATE - получить сообщение о принудительном завершении транзакции
+ii.	для ABORT RECOVER DATABASE
+
+После отключения пользователя от базы
+SQL> shutdown normal;
+
+Database closed.
+Database dismounted.
+ORACLE instance shut down.
+
+После того как пользователь сделает коммит
+SQL> shutdown transactional;
+
+Database closed.
+Database dismounted.
+ORACLE instance shut down.
+
+SQL> shutdown immediate;
+
+Database closed.
+Database dismounted.
+ORACLE instance shut down.
+
+SQL> shutdown abort;
+
+ORACLE instance shut down.
+
+SQL> startup mount;
+
+ORACLE instance started.
+
+SQL> recover database;
+
+Media recovery complete.
+
+8. перевести базу в SUSPEND/вывести из SUSPEND (RESUME), проверка по V$INSTANCE
+
+SQL> select database_status from v$instance;
+
+DATABASE_STATUS
+-------------------------------------------------
+ACTIVE
+
+
+SQL> alter system suspend;
+
+System altered.
+
+
+SQL> select database_status from v$instance;
+
+DATABASE_STATUS
+-------------------------------------------------
+SUSPENDED
+
+
+SQL> alter system resume;
+
+System altered.
+
+
+SQL> select database_status from v$instance;
+
+DATABASE_STATUS
+-------------------------------------------------
+ACTIVE
+
+9. alter system set optimizer_mode = rule scope=spfile;
+select value from v$parameter where name='optimizer_mode'
+union all
+select value from v$spparameter where name='optimizer_mode'
+сравнить значения, сделать вывод о времени применения данных значений для работающего экземпляра.
+
+
+
+10. создать двух пользователей:
+a. владелец приложения: без квоты на создание объектов, без ограничений по времени сессии, количеству сессий, роли для просмотра словаря данных и динамических представлений
+
+SQL> create profile ownerprofile limit sessions_per_user unlimited connect_time unlimited;
+
+Profile created.
+
+SQL> create user owner identified by owner;
+
+User created.
+
+SQL> alter user owner profile ownerprofile;
+
+User altered.
+
+SQL> grant unlimited tablespace to owner;
+
+Grant succeeded.
+
+SQL> grant select_catalog_role to owner;
+
+Grant succeeded.
+
+
+b. ограниченный: квота 50М, 15 мин простоя сессии, макс 2 сессии, без доступа к словарю данных
+для обоих пользователей: минимальная длина пароля: 6 символов + сложность по желанию.
+
+SQL> create profile limitedprofile limit idle_time 900 sessions_per_user 2;
+
+Profile created.
+
+SQL> create user limited identified by limited;
+
+User created.
+
+SQL> alter user limited profile limitedprofile;
+
+User altered.
+
+SQL> alter user limited quota 50m on users;
+
+User altered.
+
+
+11. продемонстрировать пользователя в dba_users, выборка параметров профиля для пользователя.
+
+SQL> select username, default_tablespace, profile, account_status from dba_users where username = 'owner' or username = 'limited';
+
+
+USERNAME
+--------------------------------------------------------------------------------
+DEFAULT_TABLESPACE
+--------------------------------------------------------------------------------
+PROFILE
+--------------------------------------------------------------------------------
+ACCOUNT_STATUS
+--------------------------------------------------------------------------------
+LIMITED
+USERS
+LIMITEDPROFILE
+OPEN
+
+
+USERNAME
+--------------------------------------------------------------------------------
+DEFAULT_TABLESPACE
+--------------------------------------------------------------------------------
+PROFILE
+--------------------------------------------------------------------------------
+ACCOUNT_STATUS
+--------------------------------------------------------------------------------
+OWNER
+USERS
+OWNERPROFILE
+OPEN
+
+
+12. Создать пользователей, применить созданные профили к ним.
+
+
+13. Установить профиль b) как значение По-умолчанию для всех вновь создаваемых пользователей, продемонстрировать вывод select для пользователя, продемонстрировать параметры профиля пользователя.
+
+
+SQL> alter profile default limit sessions_per_user 2 idle_time 900;
+
+Profile altered.
+
+
+SQL> select * from dba_profiles where profile = (select profile from dba_users where username = 'jane');
+
+
+PROFILE
+--------------------------------------------------------------------------------
+RESOURCE_NAME
+--------------------------------------------------------------------------------
+RESOURCE_TYPE
+------------------------
+LIMIT
+--------------------------------------------------------------------------------
+DEFAULT
+PASSWORD_GRACE_TIME
+PASSWORD
+7
+
+
