@@ -1,0 +1,58 @@
+##############################################################################
+# Copyright (c) 1991, 2001, 2002 by Oracle Corporation
+##############################################################################
+ 
+###########################################
+# Cache and I/O
+###########################################
+db_block_size=16384
+ 
+###########################################
+# Cursors and Library Cache
+###########################################
+open_cursors=300
+ 
+###########################################
+# Database Identification
+###########################################
+db_domain=""
+db_name=kkm
+ 
+###########################################
+# File Configuration
+###########################################
+control_files=("/home/oracle/app/oracle/oradata/kkm/control01.ctl", "/home/oracle/app/oracle/flash_recovery_area/kkm/control02.ctl")
+db_recovery_file_dest=/home/oracle/app/oracle/flash_recovery_area
+db_recovery_file_dest_size=5218762752
+ 
+###########################################
+# Miscellaneous
+###########################################
+compatible=11.2.0.0.0
+diagnostic_dest=/home/oracle/app/oracle
+memory_target=769654784
+ 
+###########################################
+# Processes and Sessions
+###########################################
+processes=150
+sessions=170
+ 
+###########################################
+# Security and Auditing
+###########################################
+audit_file_dest=/home/oracle/app/oracle/admin/kkm/adump
+audit_trail=db
+remote_login_passwordfile=EXCLUSIVE
+ 
+###########################################
+# Shared Server
+###########################################
+dispatchers="(PROTOCOL=TCP) (SERVICE=kkmXDB)"
+ 
+###########################################
+# System Managed Undo and Rollback Segments
+###########################################
+undo_tablespace=UNDOTBS1
+ 
+ 
