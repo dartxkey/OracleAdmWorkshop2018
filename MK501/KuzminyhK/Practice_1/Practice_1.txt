@@ -1,0 +1,132 @@
+1. создать последовательность дл¤ primary key DEPARTAMENT
+начало с 100, без ограничений, без кэширования.
+
+CREATE SEQUENCE my_seq START WITH 500 NOCACHE NOMAXVALUE;
+
+Проверка в 4 задании
+
+2. выбрать из словаря данных параметры созданной последовательности.
+
+SELECT * FROM SYS.ALL_SEQUENCES WHERE SEQUENCE_NAME = 'MY_SEQ';
+
+3. создать неуникальный индекс на произвольном столбце EMPLOYYES, вывести инфо о нем из словар¤ данных. (им¤ столбцы, тип,видимость)
+
+CREATE INDEX EMP_ID ON HR.EMPLOYEES (FIRST_NAME);
+
+Вывод:
+Index EMP_ID created.
+
+4. создать триггер, обеспечивающий генерацию нового номера отдела, использую sequence
+
+CREATE OR REPLACE TRIGGER my_trigger
+BEFORE INSERT ON HR.DEPARTMENTS
+FOR EACH ROW
+BEGIN
+SELECT my_seq.NEXTVAL INTO :NEW.DEPARTMENT_ID FROM DUAL;
+END;
+/
+
+INSERT INTO HR.DEPARTMENTS(DEPARTMENT_NAME) VALUES('new_dep');
+
+Вывод:
+Sequence MY_SEQ created.
+Trigger MY_TRIGGER compiled
+1 row inserted.
+
+SELECT DEPARTMENT_ID FROM HR.DEPARTMENTS WHERE DEPARTMENT_NAME='new_dep';
+
+Вывод:
+500
+
+5. Модифицировать последовательность, ограничив сверху, так, чтобы она закончилась на следующей вставке
+
+ALTER SEQUENCE MY_SEQ MAXVALUE ???;
+Хочется вставить вместо ??? nextval
+
+Способы получения nextval
+select MY_SEQ.nextval from dual;
+SELECT last_number FROM user_sequences WHERE sequence_name = 'MY_SEQ';
+
+6. Модифицировать триггер на вставку так, чтобы исключение из п.5 вызывалось явно и было пользовательским. Код придумать любой.
+
+CREATE OR REPLACE TRIGGER DEPARTMENTS_EXCEPT
+BEFORE INSERT
+	ON HR.DEPARTMENTS
+	FOR EACH ROW
+	WHEN (new.DEPARTMENT_NAME = 'excep_dep')
+BEGIN
+	DECLARE
+		DEP_EXCEPTION EXCEPTION;
+	BEGIN
+		RAISE DEP_EXCEPTION;
+	END;
+END;
+/
+
+Проверка (попытка вставить новое значение в DEPARTAMENTS):
+
+INSERT INTO HR.DEPARTMENTS(DEPARTMENT_NAME) VALUES('excep_dep');
+Вывод:
+INSERT INTO HR.DEPARTMENTS(DEPARTMENT_NAME) VALUES('excep_dep')
+Error report -
+ORA-06510: PL/SQL: unhandled user-defined exception
+ORA-06512: at "SYS.DEPARTMENTS_EXCEPT", line 5
+ORA-04088: error during execution of trigger 'SYS.DEPARTMENTS_EXCEPT'
+
+INSERT INTO HR.DEPARTMENTS(DEPARTMENT_NAME) VALUES('excep_dep1');
+Вывод:
+1 row inserted.
+
+
+7. Генерировать всякий раз исключение, если делается попытка изменения зарплаты ген.директора.
+
+CREATE OR REPLACE TRIGGER SALARY_TRIGGER
+BEFORE UPDATE
+	ON HR.EMPLOYEES
+	FOR EACH ROW
+	WHEN (new.SALARY <> old.SALARY AND old.JOB_ID = 'IT_PROG')
+BEGIN
+	DECLARE
+		DIRECTOR_SALARY_ALTERING EXCEPTION;
+	BEGIN
+		RAISE DIRECTOR_SALARY_ALTERING;
+	END;
+END;
+/
+
+Проверка:
+UPDATE HR.EMPLOYEES SET SALARY = 10 WHERE employee_id = 107;
+
+Вывод:
+UPDATE HR.EMPLOYEES SET SALARY = 10 WHERE employee_id = 107
+Error report -
+ORA-06510: PL/SQL: unhandled user-defined exception
+ORA-06512: at "SYS.SALARY_TRIGGER", line 5
+ORA-04088: error during execution of trigger 'SYS.SALARY_TRIGGER'
+
+8. создать триггер на регистрацию пользователя с записью времени и имени юзера в отлельную таблицу. Создать представление, показавающее пользователю только его входы.
+
+CREATE TABLE USERLOGON (
+  time DATE,
+  name VARCHAR2(100)
+);
+
+CREATE OR REPLACE TRIGGER USERLOGON_TRIGGER
+    AFTER LOGON ON DATABASE
+BEGIN
+    INSERT INTO USERLOGON (time, name) VALUES (SYSDATE, USER);
+END;
+/
+
+Показывает пользователю только его входы благодаря условию WHERE
+CREATE OR REPLACE VIEW USERLOGON_VIEW AS SELECT time, name FROM USERLOGON WHERE name = USER;
+
+SELECT * FROM USERLOGON_VIEW;
+
+Вывод:
+Table USERLOGON created.
+Trigger USERLOGON_TRIGGER compiled
+View USERLOGON_VIEW created.
+
+07.05.18	SYS
+07.05.18	SYS

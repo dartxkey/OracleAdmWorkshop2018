@@ -1,0 +1,309 @@
+------------------------------------------------------------------------------------------------------------------------
+1.	создать базу данных с использованием DBCA
+	a.	SID базы данных = первые 4 буквы ФИО: 
+	b.	размер блока данных: если Длина фамилии четна — 8К, иначе 16К
+	c.	пользовательское табличное пространство (FirstName%4): 
+	Type :Auto 
+	Sizing: если Длина фамилии четна  auto, иначе uniform (random size between 1M and 10M)
+
+Запуск помошника dbca: $ dbca
+Далее следовать инструциям помошника, схема базы данных создается позже.
+SID = kkm
+
+с. Создаем пользовательское табличное пространство:
+	Нужно запустить LISTENER чтобы подключаться к базе данных
+	$ /home/oracle/app/oracle/product/11.2.0/dbhome_1/bin/lsnrctl start LISTENER
+	$ sqlplus sys@kkm as sysdba
+
+	Если вылезет ошибка "ORA-12514: TNS:listener does not currently know of service requested in connect descriptor"
+	$ export ORACLE_SID=kkm
+	Еще один способ починить это дело если экспорт не помог
+	$ sqlplus /nolog
+	$ connect / as sysdba
+	$ startup
+	$ exit
+
+CREATE USER kirill_kkm IDENTIFIED BY kirill_kkm;
+Вывод:
+User created.
+
+GRANT CREATE SESSION TO kirill_kkm;
+Вывод:
+Grant succeeded.
+
+CREATE TABLESPACE kiri DATAFILE '/home/oracle/app/oracle/oradata/kkm/kiri.dbf' SIZE 10M;
+Вывод: Tablespace created.
+
+------------------------------------------------------------------------------------------------------------------------
+2.	сгенерировать скрипты создания БД с использованием DBCA, сохранить конфигурацию БД как HTML
+
+В конце помошника нужно нажать все галочки про сохранение результатов в скрипты
+
+------------------------------------------------------------------------------------------------------------------------
+3.	создать  шаблон базы данных на основе созданной и запущенной БД. Имя произвольное. Скрипты создания и шаблоны залить на GitHub.
+
+Нужно запустить LISTENER чтобы подключаться к базе данных
+$ /home/oracle/app/oracle/product/11.2.0/dbhome_1/bin/lsnrctl start LISTENER
+
+Затем с помощью dbca создать шаблон из существующей базы данных, сохраняя на выходе все скрипты
+При выборе своей базы данных для снятия с нее шаблона, нужно указать имя пользователя sys и пароль, который задать при создании базы данных
+
+------------------------------------------------------------------------------------------------------------------------
+4.	доказать работу экземпляра: вывод из представления словаря данных V$
+
+Убедиться, что LISTENER запущен и подключиться к базе данных с помощью sqlplus
+$ sqlplus sys@kkm as sysdba
+
+SELECT INSTANCE_NAME, STATUS, SHUTDOWN_PENDING, ACTIVE_STATE FROM V$INSTANCE;
+Вывод:
+INSTANCE_NAME
+------------------------------------------------
+STATUS				     SHUTDOWN_ ACTIVE_STATE
+------------------------------------ --------- ---------------------------
+kkm
+OPEN				     NO        NORMAL
+
+
+
+------------------------------------------------------------------------------------------------------------------------
+5.	создать SPFILE для экземпляра
+spfile - server parameter file
+
+CREATE SPFILE = 'spfile_params.ora' FROM PFILE = '/home/oracle/kkm_script/init.ora';
+ВЫвод:
+File created.
+
+------------------------------------------------------------------------------------------------------------------------
+6.	изменить любой параметр системы только для текущего экземпляра. Доказать выводов V$ и cat файла инициализации
+
+Найти параметр для изменения
+SELECT NAME FROM V$PARAMETER WHERE ISSYS_MODIFIABLE = 'IMMEDIATE';
+
+Например open_cursors, в init.ora 
+###########################################
+# Cursors and Library Cache
+###########################################
+open_cursors=300
+
+Только он нормально дался на исправление и скорее всего не нанесет большой урон, поэтому выбрал его
+
+Изменяем его
+ALTER SYSTEM SET open_cursors = 500 SCOPE = MEMORY;
+Вывод:
+System altered.
+
+SELECT NAME, VALUE FROM V$PARAMETER
+WHERE NAME = 'open_cursors';
+
+NAME
+--------------------------------------------------------------------------------
+VALUE
+--------------------------------------------------------------------------------
+open_cursors
+500
+
+------------------------------------------------------------------------------------------------------------------------
+7.	варианты монтирования и остановки БД
+	a.	перевести БД в режим READ ONLY 
+
+Посмотреть текущий режим
+SELECT OPEN_MODE FROM V$DATABASE;
+Вывод:
+OPEN_MODE
+-------------------------------------------------------
+READ WRITE
+
+SHUTDOWN IMMEDIATE;
+Вывод:
+Database closed.
+Database dismounted.
+ORACLE instance shut down.
+
+STARTUP MOUNT;
+Вывод:
+ORACLE instance started.
+Total System Global Area  680607744 bytes
+Fixed Size		    2216464 bytes
+Variable Size		  440405488 bytes
+Database Buffers	  230686720 bytes
+Redo Buffers		    7299072 bytes
+Database mounted.
+
+ALTER DATABASE OPEN READ ONLY;
+Вывод:
+Database altered.
+
+SELECT OPEN_MODE FROM V$DATABASE;
+Вывод:
+OPEN_MODE
+------------------------------------------------------------
+READ ONLY
+
+Чтобы вернуть старый режим
+SHUTDOWN IMMEDIATE;
+STARTUP MOUNT;
+ALTER DATABASE OPEN READ WRITE;
+	
+	b.	перевести БД в режим RESTRICT и перевод в открытую (ALTER SYSTEM DISABLE RESTRICTED SESSION;)
+	
+ALTER SYSTEM ENABLE RESTRICTED SESSION;
+Вывод:
+System altered.
+	
+	c.	SHUTDOWN (NORMAL/TRANSACTIONAL/IMMEDIATE/ABORT)
+		i.	выполнить эксперимент с живой транзакцией IMMEDIATE - получить сообщение о принудительном завершении транзакции
+		ii.	для ABORT RECOVER DATABASE
+
+SHUTDOWN NORMAL;
+Вывод (только после отключения пользователя от базы):
+Database closed.
+Database dismounted.
+ORACLE instance shut down.
+
+SHUTDOWN TRANSACTIONAL;
+Вывод (только после того как пользователь сделает COMMIT):
+Database closed.
+Database dismounted.
+ORACLE instance shut down.
+
+SHUTDOWN IMMEDIATE;
+Вывод:
+Database closed.
+Database dismounted.
+ORACLE instance shut down.
+
+SHUTDOWN ABORT;
+Вывод:
+ORACLE instance shut down.
+
+STARTUP MOUNT;
+Вывод:
+ORACLE instance started.
+
+RECOVER DATABASE;
+Вывод:
+Media recovery complete.
+		
+------------------------------------------------------------------------------------------------------------------------
+8.	перевести базу в SUSPEND/вывести из SUSPEND (RESUME), проверка по V$INSTANCE
+
+SELECT DATABASE_STATUS FROM V$INSTANCE;
+Вывод:
+DATABASE_STATUS
+-------------------------------------------------
+ACTIVE
+
+ALTER SYSTEM SUSPEND;
+Вывод:
+System altered.
+
+SELECT DATABASE_STATUS FROM V$INSTANCE;
+Вывод:
+DATABASE_STATUS
+-------------------------------------------------
+SUSPENDED
+
+ALTER SYSTEM RESUME;
+Вывод:
+System altered.
+
+SELECT DATABASE_STATUS FROM V$INSTANCE;
+Вывод:
+DATABASE_STATUS
+-------------------------------------------------
+ACTIVE
+
+------------------------------------------------------------------------------------------------------------------------
+9.	alter system set optimizer_mode = rule scope=spfile;
+select value from v$parameter where name='optimizer_mode'
+union all
+select value from v$spparameter where name='optimizer_mode'
+сравнить значения, сделать вывод о времени применения данных значений для работающего экземпляра.
+
+------------------------------------------------------------------------------------------------------------------------
+10.	создать  двух пользователей:
+	a.	владелец приложения: без квоты на создание объектов, без ограничений по времени сессии,  количеству сессий, роли для просмотра словаря данных и динамических представлений
+	
+CREATE PROFILE APP_OWNER_PROFILE LIMIT SESSIONS_PER_USER UNLIMITED CONNECT_TIME UNLIMITED;
+Вывод:
+Profile created.
+
+CREATE USER APP_OWNER IDENTIFIED BY APP_OWNER;
+Вывод:
+User created.
+
+ALTER USER APP_OWNER PROFILE APP_OWNER_PROFILE;
+Вывод:
+User altered.
+
+GRANT UNLIMITED TABLESPACE TO APP_OWNER;
+Вывод:
+Grant succeeded.
+
+GRANT SELECT_CATALOG_ROLE TO APP_OWNER;
+Вывод:
+Grant succeeded.
+	
+	b.	ограниченный: квота 50М, 15 мин простоя сессии, макс 2 сессии, без доступа к словарю данных
+	для обоих пользователей: минимальная длина пароля: 6 символов + сложность по желанию.
+	
+CREATE PROFILE LIMITED_PROFILE LIMIT IDLE_TIME 900 SESSIONS_PER_USER 2;
+Вывод:
+Profile created.
+
+CREATE USER LIMITED IDENTIFIED BY LIMITED;
+Вывод:
+User created.
+
+ALTER USER LIMITED PROFILE LIMITED_PROFILE;
+Вывод:
+User altered.
+
+ALTER USER LIMITED QUOTA 50M ON USERS;
+Вывод:
+User altered.
+
+------------------------------------------------------------------------------------------------------------------------
+11.	продемонстрировать пользователя в dba_users, выборка параметров профиля для пользователя.
+
+SELECT USERNAME, DEFAULT_TABLESPACE, PROFILE, ACCOUNT_STATUS
+FROM dba_users
+WHERE USERNAME = 'APP_OWNER' OR USERNAME = 'LIMITED';
+
+Вывод:
+
+USERNAME
+--------------------------------------------------------------------------------
+DEFAULT_TABLESPACE
+--------------------------------------------------------------------------------
+PROFILE
+--------------------------------------------------------------------------------
+ACCOUNT_STATUS
+--------------------------------------------------------------------------------
+LIMITED
+USERS
+LIMITED_PROFILE
+OPEN
+
+
+USERNAME
+--------------------------------------------------------------------------------
+DEFAULT_TABLESPACE
+--------------------------------------------------------------------------------
+PROFILE
+--------------------------------------------------------------------------------
+ACCOUNT_STATUS
+--------------------------------------------------------------------------------
+APP_OWNER
+USERS
+APP_OWNER_PROFILE
+OPEN
+
+
+------------------------------------------------------------------------------------------------------------------------
+12.	Создать пользователей, применить созданные профили к ним.
+
+------------------------------------------------------------------------------------------------------------------------
+13.	Установить профиль b) как значение По-умолчанию для всех вновь создаваемых пользователей, продемонстрировать вывод select для пользователя, продемонстрировать параметры профиля пользователя.
+
+
