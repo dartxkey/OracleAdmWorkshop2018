@@ -1,0 +1,163 @@
+1 часть
+2) C. На экране проверки предварительных условий у вас есть возможность повторить неудавшийся тест. Так что вы можетеустраните основную проблему и повторите проверку OUI для продолжения установки.
+4) C. Файл управления, файл данных и файлы журналов повтора являются частью базы данных Oracle. Оракулэкземпляр представляет собой структуры памяти и фоновые процессы
+8) C. Общая область SQL хранится в кэше библиотеки в общем пуле и является общиммежду пользователями. Если запрос выполняется еще раз, пока он не вышел из кеша библиотеки, Oracleбудет использовать проанализированный код и план выполнения из кеша библиотеки
+13) D. PMON восстанавливает все ресурсы, которыми владеет пользователь, и выпускает все блокировки на таблицах истроки, хранящиеся пользователем. Никакой другой процесс не связан с очисткой сеанса
+15) A. Экземпляр состоит из SGA и всех фоновых процессов Oracle.база данных состоит из файлов управления, файлов данных и журналов повтора.
+16) B. Множество блоков операционных систем составляют блоки базы данных, смежные куски которыхсоставляют экстенты. Сегмент состоит из одного или нескольких экстентов.
+18) A. The OFA model does not include any reference to naming conventions for the database or things inside the database, such as users, tables, or tablespaces.
+2	часть
+1.С. При использовании ALTER SYSTEM для изменения значений параметров изменение производится на серверефайл параметров (spfile) тоже, потому что значение по умолчанию для предложения SCOPE равно BOTH. Вариант D было бы правильным, если бы pfile использовался для запуска базы данных.
+2. DIAGNOSTIC_DEST - это параметр инициализации, определяющий, где
+Дом диагностического репозитория.
+3. V $ PARAMETER показывает информацию о параметрах и их текущем значении в
+база данных. V $ SPPARAMTER показывает информацию как прочитанную из spfile
+4. При создании новой базы данных или создании управляющего файла база данных должна находиться в
+Состояние NOMOUNT.
+10. При запуске экземпляра Oracle ищет файл spfileOCA11G.ora. Если он не смог найти
+этот файл, он ищет spfile.ora. Если этот файл не найден, Oracle ищет initOCA11G.ora
+файл
+11. Размер блока базы данных не может быть изменен после создания базы данных. База данных
+имя может быть изменено после повторного создания файла управления с новым именем, а
+Параметр CONTROL_FILES можно изменить после копирования файлов управления на новый
+место нахождения.
+14. B, D. STARTUP FORCE выполнит ЗАДЕРЖАНИЕ и ЗАПУСК
+база данных. SHUTDOWN ABORT прекратит все сеансы и процессы и отключит
+пример
+16. A. Каждый раз, когда вы выполняете SHUTDOWN ABORT, Oracle не выполняет чистую
+неисправность.
+Все остальные типы остановок считаются чистыми остановками, поскольку Oracle не будет
+выполнить восстановление при последующем запуске базы данных
+17. B. Выбор STARTUP RESTRICT открывает базу данных и позволяет использовать только пользователей с
+Доступ к базе данных RESTRICTED для подключения и использования
+18. C. pfile - это еще один термин для двоичного файла на стороне сервера, который Oracle читает, когда база данных
+запускается. Этот двоичный файл содержит все параметры инициализации без дефолта
+используется при запуске
+20. A, B, C. Репозиторий управления базами данных не создается, когда CREATE DATABASE
+выполняется. DBCA создает репозиторий управления базами данных и настраивает
+Управление базой данных для вас
+3	часть
+D. Управление сегментным пространством относится к управлению свободным пространством, с автоматическим сегментом
+управление пространством с использованием растровых изображений вместо FREELISTS, PCTFREE и PCTUSED
+B. Повторная информация не сохраняется в сегменте; он сохраняется в журналах повтора. Отменить сегменты
+сохраняются в табличном пространстве отмены, временные сегменты находятся во временном табличном пространстве,
+и постоянные сегменты входят во все остальные табличные пространства
+B. Объекты в базе данных Oracle 11g всегда могут включать буквы, цифры и
+символы $, _ и # (знак доллара, символ подчеркивания и знак числа). Имена могут включать любые
+другой символ, только если они заключены в двойные кавычки. Знак доллара символа не является
+специальный метасимвол в базе данных Oracle 11g
+B. Ограничения могут быть созданы как отсроченные и первоначально отложенные, но отложенные ограничения
+проверка не является значением по умолчанию
+A. Варианты временных таблиц - это либо ВКЛЮЧЕН, либо
+приводит к тому, что таблица заканчивается в конце каждой транзакции или ON COMMIT PRESERVE
+ROWS, что приводит к тому, что таблица заканчивается в конце каждой сессии
+C, A. Чтобы сделать табличное пространство только для чтения, все файлы данных, принадлежащие табличному пространству, должны
+быть в сети и доступен. Итак, принесите табличное пространство онлайн, а затем сделайте его доступным только для чтения
+A, B. Вы можете добавить больше пространства в табличное пространство либо путем добавления файла данных, либо путем
+увеличивая размер существующего файла данных. Вариант A не имеет имени файла
+определены; он использует функцию OMF для генерации имени файла
+C. Локальные временные табличные пространства создаются с использованием CREATE
+TEMPORARY TABLESPACE. Файлы данных (временные файлы), принадлежащие
+эти табличные пространства находятся в представлении DBA_TEMP_FILES.
+Столбец EXTENT_MANAGEMENT в представлении DBA_TABLESPACES показывает тип
+табличного пространства
+C. Файлы данных, относящиеся к табличному пространству SYSTEM, можно переименовать, если
+база данных находится в состоянии MOUNT, используя ФАЙЛ RENAME ALTER DATABASE
+заявление.
+4	часть 
+B. Поскольку имя слушателя по умолчанию - LISTENER, просто введите lsnrctl start. Имя
+Предполагается, что LISTENER будет слушателем в этом случае
+D. Connection Manager - это промежуточное решение, обеспечивающее мультиплексирование
+соединений, межсетевого соединения и управления доступом к сети. Все ответы
+описать управление подключением
+D. Файл tnsnames.ora настроен, если вы хотите использовать локальное имя, и обычно
+существует на клиентской рабочей станции. Он также используется для разрешения имени службы. Tnsnames.ora
+файл, используемый в локальном именовании, действительно поддерживает TCP / IP
+D. Участок HOST указывает имя контакта с сервером. CONNECT_DATA
+указывает службу базы данных для подключения. Часть PORT указывает местоположение, где
+слушатель слушает HOST. Вариант C, SERVICE_NAME, является именем фактического
+служба базы данных
+A. Правильный синтаксис для использования с методом Oracle Easy Connect при подключении
+к местоположению без URL-адреса подключается имя пользователя / пароль @ host: port / service_name. Если
+имя службы и хост идентичны, вам не нужно включать имя службы.
+A. Пользователь должен явно запрашивать выделенное соединение, когда сервер настроен в
+Режим общего сервера. В противном случае пользователь получает соединение с общим сервером. Правильный
+параметр (SERVER = DEDICATED)
+5часть
+B. Аутентификация операционной системой называется внешней аутентификацией, а
+Имя учетной записи Oracle должно совпадать с именем учетной записи операционной системы с префиксом
+Строка OS_AUTHENT_PREFIX
+C. Параметр AUDIT_TRAIL со значением DB, EXTENDED позволяет захватывать SQL
+операторов и переменных привязки при аудите. OS, EXTENDED не является допустимым значением для
+AUDIT_TRAIL
+A. Изменение таблицы в другой схеме пользователя требует либо привилегии объекта ALTER
+на этом объекте или системной привилегии ALTER ANY TABLE
+A. Когда объектные привилегии предоставляются через посредника, они неявно
+при сбросе посредника. CASCADE REVOKE и NOCASCADE
+REVOKE не являются частью синтаксиса инструкции GRANT
+B. Когда системные привилегии предоставляются через посредника, они не затрагиваются
+когда посредник отбрасывается. CASCADE REVOKE и NOCASCADE
+REVOKE не являются частью синтаксиса инструкции GRANT
+D. Оператор SET ROLE включает или отключает роли в текущем сеансе
+A. По умолчанию учетные записи пользователей не имеют квоты в любом табличном пространстве. Прежде чем пользователь сможет создать
+таблицы или индекса, вам нужно либо предоставить пользователю квоту в одном или нескольких конкретных
+C. Профили ограничивают время простоя, время процессора, логические считывания или другой ресурс
+ориентированные ограничения сеанса. Параметр C использует правильный синтаксис для ограничения времени простоя для
+сеанс до 30 минут
+B. Хотя вариант D также может работать, он включает хранение паролей в таблице в
+базы данных, что может быть проблемой безопасности. Также требуется гораздо больше усилий для настройки
+и поддерживать. Лучший способ - использовать стандартные функции профиля базы данных
+PASSWORD_REUSE_TIME и PASSWORD_REUSE_MAX. Установка одного из этих профилей
+параметры
+B. Поскольку HR_QUERY имеет привилегию SELECT ANY TABLE, никакая другая привилегия не является
+необходимо
+запрашивать пользовательские таблицы в базе данных. Чтобы избежать ошибки, HR_QUERY следует определить как
+по умолчанию
+C. В Oracle 11g пользовательские пароли чувствительны к регистру. Имя пользователя не чувствительно к регистру
+если вы
+не заключал его в двойные кавычки
+О. Вы ограничиваете количество неудачных попыток входа в систему с профилем.
+D. Назначение записей audit_trail контролируется параметром инициализации
+audit_trail. Установка этого параметра в DB или DB, EXTENDED приводит к тому, что аудиторский след
+записанных в таблицу базы данных. Установка параметра в ОС или XML приводит к тому, что контрольный журнал
+записываться в файл операционной системы
+6часть
+C. A commit makes pending DML changes permanent. When a checkpoint occurs, DBWR flushes dirty buffers to disk, which is independent of transaction boundaries
+D. Using CREATE OR REPLACE PROCEDURE is less typing, but, more important, when you drop an object, all privileges granted on that object are dropped as well. When you perform a CREATE OR REPLACE PROCEDURE, you do not lose privileges granted on that object
+B. You can create a trigger for just about any database event that involves a change to data, but you cannot create a SELECT trigger in Oracle 11g
+D.1,500
+If an undo tablespace is not explicitly created in the CREATE DATABASE command, Oracle automatically creates one with the name SYS_UNDOTBS
+If a transaction fills up an undo segment, either a new extent is allocated for the undo segment or other extents in the segment are reused if the undo data in those extents is no longer needed by other transactions using the same undo segment. Transactions cannot cross segment boundaries in an undo tablespace nor can they move to another segment
+Undo segments are always owned by SYS
+In Oracle, locks never block readers. Option A is true, if it did not include the word queries in it. Only DML statements wait when the table is locked in exclusive mode. SELECT…FOR UPDATE locks only the rows returned by the SELECT clause; it does not lock the table. The DDL_LOCK_TIMEOUT parameter is used to specify the number of seconds to wait when DDL statements on locked objects are executed. The LOCK TABLE statement can include the WAIT clause to specify the number of seconds to wait to acquire the lock.
+7часть
+Losing an entire redo log file group can result in losing committed transactions that may not yet have been written to the database files. Losing all members of a redo log file group except for one does not affect database operation and does not result in lost data. A message is placed in the alert log file. The failure of LGWR or ARC0 causes an instance failure, but you do not lose any committed transaction data
+
+To enable the flashback database option, the database must be in ARCHIVELOG mode. FLASHBACK LOG mode is not a valid mode of database operation. BEGIN BACKUP mode is used to perform hot backups without using RMAN
+In ARCHIVELOG mode, recovering the database is possible up to the last COMMIT statement; in other words, no committed transactions are lost in ARCHIVELOG mode
+
+
+Although it is recommended that you multiplex your online redo log files, it is not required to enable ARCHIVELOG mode of the database
+
+B. LOG_ARCHIVE_DEST_n specifies the archive-log location. You can configure up to 10 archive-log destinations. LOG_ARCHIVE_DEST_10 is reserved for the flash recovery area, which is specified by the parameter DB_RECOVERY_FILE_DEST
+
+A.	The instance name is not in the control file. The control file has information about the physical database structure
+
+B.	The V$DATABASE view in the column LOG_MODE shows whether the database is in ARCHIVELOG mode or in NOARCHIVELOG mode
+
+
+C.	The redo log file records all changes made to the database. The LGWR process writes the redo log buffer entries to the redo log files. These entries are used to rollforward, or to update, the data files during an instance recovery. Archive log files are used for media recovery
+
+D.	DB_RECOVERY_FILE_DEST points to the flash recovery area, and this is the default for archived log-file destination number 10
+
+
+B. When adding log-file members, specify the group number, or specify all the existing group members
+
+B. Having the control files on different disks ensures that even if you lose one disk, you lose only one control file. If you lose one of the control files, you can shut down the database and copy a control file, or you can change the CONTROL_FILES parameter and restart the database
+
+A.	To put the database into ARCHIVELOG mode, the database must be in the MOUNT state; the control files and all data files that are not offline must be available to change the database to ARCHIVELOG mode
+
+B.	You use the ALTER DATABASE ARCHIVELOG command while the database is in the MOUNT state to enable archiving of online redo log files
+
+
+
